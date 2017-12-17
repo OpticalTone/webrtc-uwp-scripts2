@@ -125,6 +125,7 @@ IF /I "%platform%"=="all" (
 	SET platform_x64=1
 	SET platform_x86=1
 	SET platform_win32=1
+  SET platform_win32_x64=1
 	SET validInput=1
 	SET messageText=Preparing WebRTC development environment for arm, x64, x86 and win32 platforms ...
 ) ELSE (
@@ -182,12 +183,16 @@ CALL:makeJunctionLinks
 
 CALL:updateFolders
 
+IF %platform_win32_x64% EQU 1 (
+    CALL:updateClang
+)
+
 CALL:setupDepotTools
 
 CALL:downloadGnBinaries
-POPD
-CALL:updateSDKVersion
-PUSHD %baseWebRTCPath% > NUL
+::POPD
+::CALL:updateSDKVersion
+::PUSHD %baseWebRTCPath% > NUL
 
 ::CALL:gflagsPatchBuild
 CALL:generateProjects
@@ -220,19 +225,18 @@ GOTO:EOF
 CALL:print %trace% "Executing makeJunctionLinks function"
 
 CALL:makeLink . buildtools ..\buildtools
-CALL:makeLink . build ..\chromium-pruned\build
-CALL:makeLink . chromium\src\third_party\jsoncpp ..\chromium-pruned\third_party\jsoncpp
+CALL:makeLink . build ..\chromium\build
+CALL:makeLink . chromium\src\third_party\jsoncpp ..\chromium\third_party\jsoncpp
 CALL:makeLink . chromium\src\third_party\jsoncpp\source ..\jsoncpp
-CALL:makeLink . chromium\src\tools\protoc_wrapper ..\chromium-pruned\tools\protoc_wrapper
-CALL:makeLink . chromium\src\third_party\protobuf ..\chromium-pruned\third_party\protobuf
-CALL:makeLink . chromium\src\third_party\yasm ..\chromium-pruned\third_party\yasm
-CALL:makeLink . chromium\src\third_party\opus ..\chromium-pruned\third_party\opus
-::CALL:makeLink . chromium\src\third_party\colorama ..\chromium-pruned\third_party\colorama
-CALL:makeLink . chromium\src\third_party\boringssl ..\chromium-pruned\third_party\boringssl
-CALL:makeLink . chromium\src\third_party\usrsctp ..\chromium-pruned\third_party\usrsctp
-CALL:makeLink . chromium\src\third_party\libvpx ..\chromium-pruned\third_party\libvpx
+CALL:makeLink . chromium\src\tools\protoc_wrapper ..\chromium\tools\protoc_wrapper
+CALL:makeLink . chromium\src\third_party\protobuf ..\chromium\third_party\protobuf
+CALL:makeLink . chromium\src\third_party\yasm ..\chromium\third_party\yasm
+CALL:makeLink . chromium\src\third_party\opus ..\chromium\third_party\opus
+CALL:makeLink . chromium\src\third_party\boringssl ..\chromium\third_party\boringssl
+CALL:makeLink . chromium\src\third_party\usrsctp ..\chromium\third_party\usrsctp
+CALL:makeLink . chromium\src\third_party\libvpx ..\chromium\third_party\libvpx
 CALL:makeLink . chromium\src\third_party\libvpx\source\libvpx ..\libvpx
-CALL:makeLink . chromium\src\testing ..\chromium-pruned\testing
+CALL:makeLink . chromium\src\testing ..\chromium\testing
 CALL:makeLink . testing chromium\src\testing
 CALL:makeLink . tools\protoc_wrapper chromium\src\tools\protoc_wrapper
 CALL:makeLink . third_party\yasm chromium\src\third_party\yasm
@@ -240,15 +244,16 @@ CALL:makeLink . third_party\yasm\binaries ..\yasm\binaries
 CALL:makeLink . third_party\yasm\source\patched-yasm ..\yasm\patched-yasm
 CALL:makeLink . third_party\opus chromium\src\third_party\opus
 CALL:makeLink . third_party\opus\src ..\opus
-::CALL:makeLink . third_party\colorama chromium\src\third_party\colorama
-::CALL:makeLink . third_party\colorama\src ..\webrtc-deps\colorama
 CALL:makeLink . third_party\boringssl chromium\src\third_party\boringssl
 CALL:makeLink . third_party\boringssl\src ..\boringssl
 CALL:makeLink . third_party\usrsctp chromium\src\third_party\usrsctp
 CALL:makeLink . third_party\usrsctp\usrsctplib ..\usrsctp
 CALL:makeLink . third_party\protobuf chromium\src\third_party\protobuf
-CALL:makeLink . chromium\src\third_party\expat ..\chromium-pruned\third_party\expat
+CALL:makeLink . chromium\src\third_party\expat ..\chromium\third_party\expat
 CALL:makeLink . third_party\expat chromium\src\third_party\expat
+CALL:makeLink . chromium\src\third_party\googletest ..\chromium\third_party\googletest
+CALL:makeLink . third_party\googletest chromium\src\third_party\googletest
+CALL:makeLink . third_party\googletest\src ..\googletest
 CALL:makeLink . third_party\libsrtp ..\libsrtp
 CALL:makeLink . third_party\libvpx .\chromium\src\third_party\libvpx
 CALL:makeLink . third_party\libyuv ..\libyuv
@@ -261,9 +266,8 @@ CALL:makeLink . third_party\gflags ..\gflags-build
 CALL:makeLink . third_party\gflags\src ..\gflags
 CALL:makeLink . third_party\winsdk_samples ..\winsdk_samples_v71
 CALL:makeLink . tools\gyp ..\gyp
-CALL:makeLink . tools\clang ..\chromium-pruned\tools\clang
-CALL:makeLink . testing\gtest ..\googletest
-CALL:makeLink . testing\gmock ..\googlemock
+CALL:makeLink . tools\clang ..\chromium\tools\clang
+
 
 GOTO:EOF
 
@@ -272,10 +276,10 @@ GOTO:EOF
 ::XCopy  /S /I /Y ..\gflags-build third_party\gflags > NUL
 ::IF !errorlevel! NEQ 0 CALL:error 1 "Missing gn files for gflags"
 
-COPY ..\chromium-pruned\third_party\BUILD.gn third_party\BUILD.gn 
-COPY ..\chromium-pruned\third_party\DEPS third_party\DEPS 
-COPY ..\chromium-pruned\third_party\OWNERS third_party\OWNERS 
-COPY ..\chromium-pruned\third_party\PRESUBMIT.py third_party\PRESUBMIT.py 
+COPY ..\chromium\third_party\BUILD.gn third_party\BUILD.gn 
+COPY ..\chromium\third_party\DEPS third_party\DEPS 
+COPY ..\chromium\third_party\OWNERS third_party\OWNERS 
+COPY ..\chromium\third_party\PRESUBMIT.py third_party\PRESUBMIT.py 
 GOTO:EOF
 
 :setupDepotTools
@@ -359,9 +363,9 @@ IF ERRORLEVEL 1 CALL:error 1 "Failed updating gn arguments for CPU %~2"
 IF ERRORLEVEL 1 CALL:error 1 "Failed updating gn arguments for debug/release %IsDebugTarget%"
 
 IF %logLevel% GEQ %trace% (
-	CALL GN gen !outputPath! --ide="vs2015"
+	CALL GN gen !outputPath! --ide="vs2017"
 ) ELSE (
-	CALL GN gen !outputPath! --ide="vs2015" >NUL
+	CALL GN gen !outputPath! --ide="vs2017" >NUL
 )
 IF !errorlevel! NEQ 0 CALL:error 1 "Could not generate WebRTC projects for %1 platform, %2 CPU"
 
@@ -427,6 +431,21 @@ IF NOT EXIST %~1\NUL (
 )
 GOTO:EOF
 
+:updateClang
+CALL:print %trace% "Running clang update ..."
+
+:: TODO Need to find workaround solution for pop-up window "Git Credential Manager for Windows". In the meanwhile, just click "Cancel" button in case pop-up window appears.
+CALL:print %warning% "In case pop-up window 'Git Credential Manager for Windows' appears after clang download, just click 'Cancel' button."
+
+CALL python tools\clang\scripts\update.py %*
+
+CALL:makeDirectory third_party\llvm
+
+CALL:makeLink . third_party\llvm chromium\src\third_party\llvm
+CALL:makeLink . third_party\llvm-build chromium\src\third_party\llvm-build
+
+GOTO:EOF
+
 :makeLink
 IF NOT EXIST %~1\NUL CALL:error 1 "%folderStructureError:"=% %~1 does not exist!"
 
@@ -445,6 +464,7 @@ IF %logLevel% GEQ %trace% (
 IF %ERRORLEVEL% NEQ 0 CALL:ERROR 1 "COULD NOT CREATE SYMBOLIC LINK TO %~2 FROM %~3"
 
 :alreadyexists
+CALL:print %trace% "Path "%~2" already exists"
 POPD
 
 GOTO:EOF

@@ -4,6 +4,7 @@ set -e
 
 target=all
 platform=all
+architecture=all
 logLevel=4
 platform_iOS=0
 platform_macOS=0
@@ -15,27 +16,27 @@ warning=2
 debug=3
 trace=4
 
-BUILD_FOLDER_CHROMIUM_DESTINATION=../chromium-pruned/build/
-CHROMIUM_FOLDER_DESTINATION=../../chromium-pruned/
-BORINGSSL_FOLDER_CHROMIUM_DESTINATION=../chromium-pruned/third_party/boringssl/src/
-#COLORAMA_FOLDER_CHROMIUM_DESTINATION=../chromium-pruned/third_party/colorama/src/
-JSONCPP_FOLDER_CHROMIUM_DESTINATION=../chromium-pruned/third_party/jsoncpp/source/
-LIBJPEG_TURBO_FOLDER_CHROMIUM_DESTINATION=../chromium-pruned/third_party/libjpeg_turbo/
+BUILD_FOLDER_CHROMIUM_DESTINATION=../chromium/build/
+CHROMIUM_FOLDER_DESTINATION=../../chromium/
+BORINGSSL_FOLDER_CHROMIUM_DESTINATION=../chromium/third_party/boringssl/src/
+#COLORAMA_FOLDER_CHROMIUM_DESTINATION=../chromium/third_party/colorama/src/
+JSONCPP_FOLDER_CHROMIUM_DESTINATION=../chromium/third_party/jsoncpp/source/
+LIBJPEG_TURBO_FOLDER_CHROMIUM_DESTINATION=../chromium/third_party/libjpeg_turbo/
 
-LIBSRTP_TURBO_FOLDER_CHROMIUM_DESTINATION=../chromium-pruned/third_party/libsrtp/
-LIBVPX_TURBO_FOLDER_CHROMIUM_DESTINATION=../chromium-pruned/third_party/libvpx/source/libvpx/
-LIBYUV_TURBO_FOLDER_CHROMIUM_DESTINATION=../chromium-pruned/third_party/libyuv/
-OPENMAX_TURBO_FOLDER_CHROMIUM_DESTINATION=../chromium-pruned/third_party/openmax_dl/
-OPUS_FOLDER_CHROMIUM_DESTINATION=../chromium-pruned/third_party/opus/src/
+LIBSRTP_TURBO_FOLDER_CHROMIUM_DESTINATION=../chromium/third_party/libsrtp/
+LIBVPX_TURBO_FOLDER_CHROMIUM_DESTINATION=../chromium/third_party/libvpx/source/libvpx/
+LIBYUV_TURBO_FOLDER_CHROMIUM_DESTINATION=../chromium/third_party/libyuv/
+OPENMAX_TURBO_FOLDER_CHROMIUM_DESTINATION=../chromium/third_party/openmax_dl/
+OPUS_FOLDER_CHROMIUM_DESTINATION=../chromium/third_party/opus/src/
 
-USRSCTP_FOLDER_CHROMIUM_DESTINATION=../chromium-pruned/third_party/usrsctp/usrsctplib/
-PATCHED_YASM_FOLDER_CHROMIUM_DESTINATION=../chromium-pruned/third_party/yasm/source/patched-yasm/
-YASM_FOLDER_CHROMIUM_DESTINATION=../chromium-pruned/third_party/yasm/binaries/
-GYP_FOLDER_CHROMIUM_DESTINATION=../chromium-pruned/tools/gyp/
-GTEST_FOLDER_CHROMIUM_DESTINATION=../chromium-pruned/testing/gtest/
+USRSCTP_FOLDER_CHROMIUM_DESTINATION=../chromium/third_party/usrsctp/usrsctplib/
+PATCHED_YASM_FOLDER_CHROMIUM_DESTINATION=../chromium/third_party/yasm/source/patched-yasm/
+YASM_FOLDER_CHROMIUM_DESTINATION=../chromium/third_party/yasm/binaries/
+GYP_FOLDER_CHROMIUM_DESTINATION=../chromium/tools/gyp/
+GTEST_FOLDER_CHROMIUM_DESTINATION=../chromium/testing/gtest/
 
-GFLAGS_FOLDER_CHROMIUM_DESTINATION=../chromium-pruned/third_party/gflags/src/
-GMOCK_FOLDER_CHROMIUM_DESTINATION=../chromium-pruned/testing/gmock/
+GFLAGS_FOLDER_CHROMIUM_DESTINATION=../chromium/third_party/gflags/src/
+GMOCK_FOLDER_CHROMIUM_DESTINATION=../chromium/testing/gmock/
 
 BOGUS_EXPAT_PATH=../../../ortc/apple/templates/libs/bogus_gyps/bogus_expat.gyp
 BOGUS_CLASS_DUMP_PATH=../../../ortc/apple/templates/libs/bogus_gyps/bogus_class-dump.gyp
@@ -48,7 +49,7 @@ SRC_FILES_DESTINATION=../webrtc/chromium/src/
 
 NINJA_PATH=../../../bin/ninja/
 #NINJA_PATH_TO_REPLACE_WITH=""
-NINJA_URL="http://github.com/martine/ninja/releases/download/v1.6.0/ninja-mac.zip"
+NINJA_URL="http://github.com/martine/ninja/releases/download/v1.7.2/ninja-mac.zip"
 NINJA_ZIP_FILE="ninja-mac.zip"
 
 PROJECT_FILE=all.ninja.xcworkspace
@@ -60,11 +61,11 @@ PROJECT_IOS_FILE=all_ios.xcodeproj
 #OUTPUT_ANDROID=out_android
 #OUTPUT_LINUX=out_linux
 
-TARGET_CPU_arm=0
-TARGET_CPU_armv7=0
-TARGET_CPU_arm64=0
-TARGET_CPU_x86=0
-TARGET_CPU_x64=1
+architecture_arm=0
+architecture_armv7=0
+architecture_arm64=0
+architecture_x86=0
+architecture_x64=0
 
 HOST_SYSTEM=mac
 HOST_OS=osx
@@ -173,27 +174,45 @@ identifyPlatform()
     if [ "$HOST_SYSTEM" == "linux" ]; then
       platform_linux=1
       platform_android=1
+      platform_iOS=0
+      platform_macOS=0
+      validInput=1
       messageText="Preparing development environment for linux and android platforms ..."
     else
       platform_iOS=1
       platform_macOS=1
+      platform_linux=0
+      platform_android=0
+      validInput=1
       messageText="Preparing development environment for iOS and macOS platforms ..."
     fi
     validInput=1
   elif [ "$platform" == "iOS" ]; then
     platform_iOS=1
+    platform_macOS=0
+    platform_linux=0
+    platform_android=0
     validInput=1
     messageText="Preparing development environment for $platform platform..."
-  elif [ "$platform" == "macOS" ]; then
+  elif [ "$platform" == "mac" ]; then
     platform_macOS=1
+    platform_iOS=0
+    platform_linux=0
+    platform_android=0
     validInput=1
     messageText="Preparing development environment for $platform platform..."
   elif [ "$platform" == "linux" ]; then
     platform_linux=1
+    platform_macOS=0
+    platform_iOS=0
+    platform_android=0
     validInput=1
     messageText="Preparing development environment for $platform platform..."
   elif [ "$platform" == "android" ]; then
     platform_android=1
+    platform_linux=0
+    platform_macOS=0
+    platform_iOS=0
     validInput=1
     messageText="Preparing development environment for $platform platform..."
   else
@@ -203,6 +222,49 @@ identifyPlatform()
   print $warning "$messageText"
 }
 
+identifyArchitecture()
+{
+  print $trace "Identifying target architecture ..."
+  if [ $platform_iOS -eq 1 ] || [ $platform_android -eq 1 ]; then
+    if [ "$architecture" == "all" ]; then
+      architecture_arm=1
+      architecture_arm64=1
+    elif [ "$architecture" == "arm" ]; then
+      architecture_arm=1
+      architecture_arm64=0
+    elif [ "$architecture" == "arm64" ]; then
+      architecture_arm=0
+      architecture_arm64=1
+    fi
+  fi
+
+  if [ $platform_macOS -eq 1 ]; then
+    if [ "$architecture" == "all" ]; then
+      architecture_x86=1
+      architecture_x64=1
+    elif [ "$architecture" == "x86" ]; then
+      architecture_x86=1
+      architecture_x64=0
+    elif [ "$architecture" == "x64" ]; then
+      architecture_x86=0
+      architecture_x64=1
+    fi
+  fi
+
+  if [ $platform_linux -eq 1 ]; then
+    if [ "$architecture" == "all" ]; then
+# architecture "all" is currently broken for linux because of broken x86. as a temporarily workaround, the following line is commented out.
+#      architecture_x86=1    
+      architecture_x64=1
+    elif [ "$architecture" == "x86" ]; then
+      architecture_x86=1
+      architecture_x64=0
+    elif [ "$architecture" == "x64" ]; then
+      architecture_x86=0
+      architecture_x64=1
+    fi
+  fi  
+}
 makeDirectory()
 {
   TARGET=$1
@@ -213,14 +275,14 @@ makeDirectory()
   if [ ! -d $TARGET ]; then
     error 1 "(makeDirectory): Unable to create folder $TARGET"
   fi
-  
+
 }
 
 copyFolder()
 {
   SOURCE=$1
   TARGET=$2
-  
+
   if [[ -n $SOURCE && -n $TARGET ]]; then
     if [ -d $SOURCE ]; then
       print $debug "Copying $SOURCE to $TARGET"
@@ -263,7 +325,7 @@ makeFolderStructure()
   #copyFolder ../googletest/ $GTEST_FOLDER_CHROMIUM_DESTINATION
   #copyFolder ../gflags/ $GFLAGS_FOLDER_CHROMIUM_DESTINATION
   #copyFolder ../googlemock/ $GMOCK_FOLDER_CHROMIUM_DESTINATION
-  #copyFolder ../chromium-pruned/ $SRC_FILES_DESTINATION
+  #copyFolder ../chromium/ $SRC_FILES_DESTINATION
 
   print $warning "Finished creating folder structure"
 }
@@ -439,22 +501,23 @@ makeLinks()
   print $warning "Creating soft links"
 
   makeLink "." "buildtools" "../buildtools"
-  makeLink "." "build" "../chromium-pruned/build"
-  makeLink "." "base" "../chromium-pruned/base"
-  makeLink "." "chromium/src/third_party/jsoncpp" "../chromium-pruned/third_party/jsoncpp"
+  makeLink "." "buildtools/third_party/libc++/trunk" "../llvm/libcxx"
+  makeLink "." "buildtools/third_party/libc++abi/trunk" "../llvm/libcxxabi"
+  makeLink "." "build" "../chromium/build"
+  makeLink "." "base" "../chromium/base"
+  makeLink "." "chromium/src/third_party/jsoncpp" "../chromium/third_party/jsoncpp"
   makeLink "." "chromium/src/third_party/jsoncpp/source" "../jsoncpp"
 
-  makeLink "." "chromium/src/tools/protoc_wrapper" "../chromium-pruned/tools/protoc_wrapper"
-  makeLink "." "chromium/src/tools/clang" "../chromium-pruned/tools/clang"
-  makeLink "." "chromium/src/third_party/protobuf" "../chromium-pruned/third_party/protobuf"
-  makeLink "." "chromium/src/third_party/yasm" "../chromium-pruned/third_party/yasm"
-  makeLink "." "chromium/src/third_party/opus" "../chromium-pruned/third_party/opus"
-  #makeLink "." "chromium/src/third_party/colorama" "../chromium-pruned/third_party/colorama"
-  makeLink "." "chromium/src/third_party/boringssl" "../chromium-pruned/third_party/boringssl"
-  makeLink "." "chromium/src/third_party/usrsctp" "../chromium-pruned/third_party/usrsctp"
-  makeLink "." "chromium/src/third_party/libvpx" "../chromium-pruned/third_party/libvpx"
+  makeLink "." "chromium/src/tools/protoc_wrapper" "../chromium/tools/protoc_wrapper"
+  makeLink "." "chromium/src/tools/clang" "../chromium/tools/clang"
+  makeLink "." "chromium/src/third_party/protobuf" "../chromium/third_party/protobuf"
+  makeLink "." "chromium/src/third_party/yasm" "../chromium/third_party/yasm"
+  makeLink "." "chromium/src/third_party/opus" "../chromium/third_party/opus"
+  makeLink "." "chromium/src/third_party/boringssl" "../chromium/third_party/boringssl"
+  makeLink "." "chromium/src/third_party/usrsctp" "../chromium/third_party/usrsctp"
+  makeLink "." "chromium/src/third_party/libvpx" "../chromium/third_party/libvpx"
   makeLink "." "chromium/src/third_party/libvpx/source/libvpx" "../libvpx"
-  makeLink "." "chromium/src/testing" "../chromium-pruned/testing"
+  makeLink "." "chromium/src/testing" "../chromium/testing"
   makeLink "." "testing" "chromium/src/testing"
   makeLink "." "tools/protoc_wrapper" "chromium/src/tools/protoc_wrapper"
   makeLink "." "tools/clang" "chromium/src/tools/clang"
@@ -463,15 +526,16 @@ makeLinks()
   makeLink "." "third_party/yasm/source/patched-yasm" "../yasm/patched-yasm"
   makeLink "." "third_party/opus" "chromium/src/third_party/opus"
   #makeLink "." "third_party/opus/src" "../opus"
-  #makeLink "." "third_party/colorama chromium/src/third_party/colorama"
-  #makeLink "." "third_party/colorama/src "../webrtc-deps/colorama"
   makeLink "." "third_party/boringssl" "chromium/src/third_party/boringssl"
   makeLink "." "third_party/boringssl/src" "../boringssl"
   makeLink "." "third_party/usrsctp" "chromium/src/third_party/usrsctp"
   makeLink "." "third_party/usrsctp/usrsctplib" "../usrsctp"
   makeLink "." "third_party/protobuf" "chromium/src/third_party/protobuf"
-  makeLink "." "chromium/src/third_party/expat" "../chromium-pruned/third_party/expat"
+  makeLink "." "chromium/src/third_party/expat" "../chromium/third_party/expat"
   makeLink "." "third_party/expat" "chromium/src/third_party/expat"
+  makeLink "." "chromium/src/third_party/googletest" "../chromium/third_party/googletest"
+  makeLink "." "third_party/googletest" "chromium/src/third_party/googletest"
+  makeLink "." "third_party/googletest/src" "../googletest"
   makeLink "." "third_party/libsrtp" "../libsrtp"
   makeLink "." "third_party/libvpx" "chromium/src/third_party/libvpx"
   makeLink "." "third_party/libyuv" "../libyuv"
@@ -484,16 +548,16 @@ makeLinks()
   makeLink "." "third_party/gflags/src" "../gflags"
   #makeLink "." "third_party/winsdk_samples" "../winsdk_samples_v71"
   makeLink "." "tools/gyp" "../gyp"
-  makeLink "." "tools/clang" "../chromium-pruned/tools/clang"
-  makeLink "." "testing/gtest" "../googletest"
-  makeLink "." "testing/gmock" "../googlemock"
+  makeLink "." "tools/clang" "../chromium/tools/clang"
+  #makeLink "." "testing/gtest" "../googletest"
+  #makeLink "." "testing/gmock" "../googlemock"
 
   #makeLink "." "build" $BUILD_FOLDER_CHROMIUM_DESTINATION
   ##makeLink "chromium" "src" $CHROMIUM_FOLDER_DESTINATION
   #makeLink "." "testing" "chromium/src/testing"
   #makeLink "tools" "protoc_wrapper" "../chromium/src/tools/protoc_wrapper"
   #makeLink "tools" "gyp" "../chromium/src/tools/gyp"
- 
+
   #makeLink "third_party" "protobuf" "../chromium/src/third_party/protobuf"
   #makeLink "third_party" "yasm" "../chromium/src/third_party/yasm"
   #makeLink "third_party" "opus" "../chromium/src/third_party/opus"
@@ -515,24 +579,24 @@ makeLinks()
 
 cpNewest()
 {
-  SOURCE="$1"  
+  SOURCE="$1"
   DEST="$2"
-  if [ -e "$DEST" ]; then
-    cp -u $SOURCE $DEST
-  fi
+#  if [ -e "$DEST" ]; then
+#    cp -u $SOURCE $DEST
+#  fi
   if [ ! -e "$SOURCE" ]; then
     error 1 "Failed to copy the source file $SOURCE ..."
   fi
   print $debug "Copying file from $SOURCE to $DEST"
-  cp -u $SOURCE $DEST
+  cp $SOURCE $DEST
 }
 
 updateFolders()
 {
-  cpNewest ../chromium-pruned/third_party/BUILD.gn third_party/BUILD.gn
-  cpNewest ../chromium-pruned/third_party/DEPS third_party/DEPS
-  cpNewest ../chromium-pruned/third_party/OWNERS third_party/OWNERS
-  cpNewest ../chromium-pruned/third_party/PRESUBMIT.py third_party/PRESUBMIT.py
+  cpNewest ../chromium/third_party/BUILD.gn third_party/BUILD.gn
+  cpNewest ../chromium/third_party/DEPS third_party/DEPS
+  cpNewest ../chromium/third_party/OWNERS third_party/OWNERS
+  cpNewest ../chromium/third_party/PRESUBMIT.py third_party/PRESUBMIT.py
   cpNewest ../../linux/templates/build/linux/sysroot_scripts/install-sysroot-alt.py build/linux/sysroot_scripts/install-sysroot-alt.py
 }
 
@@ -566,7 +630,7 @@ downloadGnBinaries()
     print $debug "Downloading gn tool ..."
     result=$(python $DepotToolsPath/download_from_google_storage.py -b chromium-gn -s buildtools/$hostBuildTools/gn.sha1)
     print $debug "$result"
-  fi  
+  fi
   if [ ! -e "buildtools/$hostBuildTools/clang-format" ]; then
     print $debug "Downloading clang-format tool ..."
     result=$(python $DepotToolsPath/download_from_google_storage.py -b chromium-clang-format -s buildtools/$hostBuildTools/clang-format.sha1)
@@ -743,18 +807,20 @@ generateProjectsForPlatform()
   sed -i -e "s/-is_debug-/$IsDebugTarget/g" $webRTCGnArgsDestinationPath
   sed -i -e "s/-target_os-/$1/g" $webRTCGnArgsDestinationPath
 
+
   if [ $logLevel -ge $trace ]; then
     gn gen $outputPath
   else
     gn gen $outputPath > /dev/null
   fi
+
   if [ $? -ne 0 ]; then
     error 1 "Could not generate WebRTC projects for %1 platform, %2 CPU"
   fi
 
   pushd "$outputPath/obj" 2> /dev/null
 
-  $DepotToolsPath/ninja -C "../../../$outputPath/" obj/default.stamp
+  #$DepotToolsPath/ninja -C "../../../$outputPath/" obj/default.stamp
 
   popd > /dev/null
 
@@ -765,88 +831,68 @@ generateProjects()
   print $debug "Executing generateProjects function"
 
   if [ $platform_iOS -eq 1 ]; then
-    if [ $TARGET_CPU_arm -eq 1 ]; then
+    if [ $architecture_arm -eq 1 ]; then
       generateProjectsForPlatform ios arm debug
       generateProjectsForPlatform ios arm release
     fi
-    if [ $TARGET_CPU_armv7 -eq 1 ]; then
+    if [ $architecture_armv7 -eq 1 ]; then
       generateProjectsForPlatform ios armv7 debug
       generateProjectsForPlatform ios armv7 release
     fi
-    if [ $TARGET_CPU_arm64 -eq 1 ]; then
+    if [ $architecture_arm64 -eq 1 ]; then
       generateProjectsForPlatform ios arm64 debug
       generateProjectsForPlatform ios arm64 release
-    fi
-    if [ $TARGET_CPU_x86 -eq 1 ]; then
-      generateProjectsForPlatform ios x86 debug
-      generateProjectsForPlatform ios x86 release
-    fi
-    if [ $TARGET_CPU_x64 -eq 1 ]; then
-      generateProjectsForPlatform ios x64 debug
-      generateProjectsForPlatform ios x64 release
     fi
   fi
 
   if [ $platform_macOS -eq 1 ]; then
-    if [ $TARGET_CPU_arm -eq 1 ]; then
-      generateProjectsForPlatform mac arm debug
-      generateProjectsForPlatform mac arm release
-    fi
-    if [ $TARGET_CPU_armv7 -eq 1 ]; then
-      generateProjectsForPlatform mac armv7 debug
-      generateProjectsForPlatform mac armv7 release
-    fi
-    if [ $TARGET_CPU_arm64 -eq 1 ]; then
-      generateProjectsForPlatform mac arm64 debug
-      generateProjectsForPlatform mac arm64 release
-    fi
-    if [ $TARGET_CPU_x86 -eq 1 ]; then
+    if [ $architecture_x86 -eq 1 ]; then
       generateProjectsForPlatform mac x86 debug
       generateProjectsForPlatform mac x86 release
     fi
-    if [ $TARGET_CPU_x64 -eq 1 ]; then
+    if [ $architecture_x64 -eq 1 ]; then
       generateProjectsForPlatform mac x64 debug
       generateProjectsForPlatform mac x64 release
     fi
   fi
 
   if [ $platform_linux -eq 1 ]; then
-    if [ $TARGET_CPU_arm -eq 1 ]; then
+    if [ $architecture_arm -eq 1 ]; then
       generateProjectsForPlatform linux arm debug
       generateProjectsForPlatform linux arm release
     fi
-    if [ $TARGET_CPU_armv7 -eq 1 ]; then
+    if [ $architecture_armv7 -eq 1 ]; then
       generateProjectsForPlatform linux armv7 debug
       generateProjectsForPlatform linux armv7 release
     fi
-    if [ $TARGET_CPU_arm64 -eq 1 ]; then
+    if [ $architecture_arm64 -eq 1 ]; then
       generateProjectsForPlatform linux arm64 debug
       generateProjectsForPlatform linux arm64 release
     fi
-    if [ $TARGET_CPU_x86 -eq 1 ]; then
+    if [ $architecture_x86 -eq 1 ]; then
       generateProjectsForPlatform linux x86 debug
       generateProjectsForPlatform linux x86 release
     fi
-    if [ $TARGET_CPU_x64 -eq 1 ]; then
+    if [ $architecture_x64 -eq 1 ]; then
       generateProjectsForPlatform linux x64 debug
       generateProjectsForPlatform linux x64 release
     fi
   fi
 
   if [ $platform_android -eq 1 ]; then
-    if [ $TARGET_CPU_arm -eq 1 ]; then
+    if [ $architecture_arm -eq 1 ]; then
       generateProjectsForPlatform android arm debug
       generateProjectsForPlatform android arm release
     fi
-    if [ $TARGET_CPU_armv7 -eq 1 ]; then
+    if [ $architecture_armv7 -eq 1 ]; then
       generateProjectsForPlatform android armv7 debug
       generateProjectsForPlatform android armv7 release
     fi
-    if [ $TARGET_CPU_x86 -eq 1 ]; then
+    if [ $architecture_x86 -eq 1 ]; then
       generateProjectsForPlatform android x86 debug
       generateProjectsForPlatform android x86 release
     fi
-    if [ $TARGET_CPU_x64 -eq 1 ]; then
+    if [ $architecture_x64 -eq 1 ]; then
       generateProjectsForPlatform android x64 debug
       generateProjectsForPlatform android x64 release
     fi
@@ -857,7 +903,7 @@ finished()
 {
   echo
   print $info "Success: WebRtc development environment is set."
-    
+
 }
 
 #-------------------------------------------------------------------------------
@@ -897,7 +943,7 @@ do
         shift 2
         ;;
     -help|-h)
-        help
+        helpgenerateProjects
         exit 1
         ;;
     -loglevel|-l)
@@ -934,6 +980,7 @@ print $warning "LogLevel: $logLevel"
 
 precheck
 identifyPlatform
+identifyArchitecture
 makeFolderStructure
 ##cleanPreviousResults
 ##setNinja
@@ -948,7 +995,7 @@ downloadGnBinaries
 
 generateProjects
 
-#if [ $platform_iOS -eq  1 ]; 
+#if [ $platform_iOS -eq  1 ];
 #then
 #    make_ios_project armv7
 #    make_ios_project arm64
@@ -957,7 +1004,7 @@ generateProjects
 #if [ $platform_macOS -eq  1 ]; then
 #  make_mac_project
 #fi
-  
+
 #setNinjaPathForWrappers
 popd > /dev/null
 #finished
