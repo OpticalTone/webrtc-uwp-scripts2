@@ -28,7 +28,6 @@ SET nugetOrtcBasePath=ortc\windows\nuget
 SET nugetWebRtcBasePath=webrtc\windows\nuget
 SET OrtcWebRtcSolutionPath=webrtc\xplatform\webrtc\webrtcForOrtc.vs2015.sln
 SET WinrtWebRtcSolutionPath=webrtc\xplatform\webrtc\webrtcLib.sln
-SET WebRtcTemplateSolutionPath=webrtc\xplatform\webrtc\out\
 SET WebRtcSolutionPath=""
 SET nugetOutputPath=""
 SET nugetPath=""
@@ -243,7 +242,7 @@ IF %generate_Ortc_Nuget% EQU 1 (
 	
 	CALL:build !SolutionPathOrtc! Api\org_Ortc\org_ortc x86
 	CALL:build !SolutionPathOrtc! Api\org_Ortc\org_ortc x64
-	REM CALL:build !SolutionPathOrtc! Api\org_Ortc\org_ortc arm
+	CALL:build !SolutionPathOrtc! Api\org_Ortc\org_ortc arm
 	
 	CALL:preparePackage Ortc
 )
@@ -259,7 +258,7 @@ IF %generate_WebRtc_Nuget% EQU 1 (
 	
 	CALL:build !SolutionPathWebRtc! Api\org_WebRtc\Org.WebRtc x86
 	CALL:build !SolutionPathWebRtc! Api\org_WebRtc\Org.WebRtc x64
-	REM CALL:build !SolutionPathWebRtc! Api\org_WebRtc\Org.WebRtc arm
+	CALL:build !SolutionPathWebRtc! Api\org_WebRtc\Org.WebRtc arm
 
 	CALL:preparePackage WebRtc
 )
@@ -268,25 +267,22 @@ GOTO:EOF
 :build
 
 SET CONFIGURATION=Release
-SET buildPlatform=%~3
 CALL:setCompilerOption %~3
 
 CALL %msVS_Path%\VC\vcvarsall.bat %currentBuildCompilerOption%
 IF !ERRORLEVEL! EQU 1 CALL:error 1 "Could not setup %~2 compiler"
 
-SET WebRtcSolutionPath=%WebRtcTemplateSolutionPath%winuwp_10_!buildPlatform!_release\WebRtc.sln
-
 CALL:print %warning% "Building WebRtc for %PLATFORM%"
-CALL:print %trace% "Solution: !WebRtcSolutionPath!"
+CALL:print %trace% "Solution: %~1"
 CALL:print %trace% "Project: %~2"
 CALL:print %trace% "Compiler option: %~3"
 CALL:print %trace% "CONFIGURATION: %CONFIGURATION%"
 CALL:print %trace% "PLATFORM: %PLATFORM%"
 
 IF %logLevel% GEQ %trace% (
-	CALL bin\buildWebRTC.bat !WebRtcSolutionPath! %CONFIGURATION% %~3 %nugetName%
+	CALL bin\buildWebRTC.bat %WebRtcSolutionPath% %CONFIGURATION% %~3 %nugetName%
 ) ELSE (
-	CALL bin\buildWebRTC.bat !WebRtcSolutionPath! %CONFIGURATION% %~3 %nugetName% >NUL
+	CALL bin\buildWebRTC.bat %WebRtcSolutionPath% %CONFIGURATION% %~3 %nugetName% >NUL
 )
 IF ERRORLEVEL 1 CALL:error 1 "Building %~2 project for %PLATFORM% %CONFIGURATION% has failed"
 
@@ -308,7 +304,6 @@ IF ERRORLEVEL 1 CALL:error 1 "Building %~2 project for %PLATFORM% %CONFIGURATION
 GOTO:EOF
 
 :prepareTemplates
-CALL:print %debug% "Copying templates ..."
 
 IF /I "%~1"=="webrtc" (
 	SET nugetTemplateProjectPath=%nugetWebRtcTemplateProjectPath%
@@ -441,8 +436,8 @@ CALL:createFolder %nugetPath%\%nugetName%
 CALL::copyFiles %sourcex86WinmdPath% %nugetLibUAPPath%
 IF EXIST %sourcex86XmlPath% CALL::copyFiles %sourcex86XmlPath% %nugetLibUAPPath%
 
-REM CALL::copyFiles %sourcexARMDllPath% %nugetRuntimesARMPath%
-REM CALL::copyFiles %sourcexARMPriPath% %nugetRuntimesARMPath%
+CALL::copyFiles %sourcexARMDllPath% %nugetRuntimesARMPath%
+CALL::copyFiles %sourcexARMPriPath% %nugetRuntimesARMPath%
 
 CALL::copyFiles %sourcex64DllPath% %nugetRuntimesx64Path%
 CALL::copyFiles %sourcex64PriPath% %nugetRuntimesx64Path%
@@ -617,9 +612,9 @@ CALL:createFolder !packageNugetPath!
 FOR /R %nugetOutputPath% %%f in (*!nugetVersion!*.nupkg) DO COPY %%f !packageNugetPath! > NUL
 
 ::Copy ARM pdb files
-REM CALL:createFolder !packagePdbsPath!\ARM
-REM FOR /R %packagePdbsSourcePath%\ARM\ %%f in (*.pdb) DO COPY %%f !packagePdbsPath!\ARM > NUL
-REM FOR /R %packagePdbsSourceWrapperPath%\ARM\Release\ %%f in (*.pdb) DO COPY %%f !packagePdbsPath!\ARM > NUL
+CALL:createFolder !packagePdbsPath!\ARM
+FOR /R %packagePdbsSourcePath%\ARM\ %%f in (*.pdb) DO COPY %%f !packagePdbsPath!\ARM > NUL
+FOR /R %packagePdbsSourceWrapperPath%\ARM\Release\ %%f in (*.pdb) DO COPY %%f !packagePdbsPath!\ARM > NUL
 
 ::Copy X64 pdb files
 CALL:createFolder !packagePdbsPath!\X64
