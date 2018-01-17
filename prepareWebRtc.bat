@@ -347,6 +347,14 @@ IF "%~3"=="debug" (
 	set IsDebugTarget=true
 )
 
+set IsWinUWPTarget=false
+if "%~1"=="win" (
+	set IsWinUWPTarget=false
+)
+if "%~1"=="winuwp" (
+	set IsWinUWPTarget=true
+)
+
 SET outputPath=out\%~1_%~2_%~3
 SET webRTCGnArgsDestinationPath=!outputPath!\args.gn
 CALL:makeDirectory !outputPath!
@@ -355,9 +363,11 @@ CALL:copyTemplates %webRTCGnArgsTemplatePath% !webRTCGnArgsDestinationPath!
 %powershell_path% -ExecutionPolicy ByPass -File ..\..\..\bin\TextReplaceInFile.ps1 !webRTCGnArgsDestinationPath! "-target_os-" "%~1" !webRTCGnArgsDestinationPath!
 IF ERRORLEVEL 1 CALL:error 1 "Failed updating gn arguments for platfrom %~1"
 
-
 %powershell_path% -ExecutionPolicy ByPass -File ..\..\..\bin\TextReplaceInFile.ps1 !webRTCGnArgsDestinationPath! "-target_cpu-" "%2" !webRTCGnArgsDestinationPath!
 IF ERRORLEVEL 1 CALL:error 1 "Failed updating gn arguments for CPU %~2"
+
+%powershell_path% -ExecutionPolicy ByPass -File ..\..\..\bin\TextReplaceInFile.ps1 !webRTCGnArgsDestinationPath! "-is_winuwp-" "%IsWinUWPTarget%" !webRTCGnArgsDestinationPath!
+IF ERRORLEVEL 1 CALL:error 1 "Failed updating gn arguments for is_winuwp %~1"
 
 %powershell_path% -ExecutionPolicy ByPass -File ..\..\..\bin\TextReplaceInFile.ps1 !webRTCGnArgsDestinationPath! "-is_debug-" "%IsDebugTarget%" !webRTCGnArgsDestinationPath!
 IF ERRORLEVEL 1 CALL:error 1 "Failed updating gn arguments for debug/release %IsDebugTarget%"
@@ -383,24 +393,24 @@ SET DEPOT_TOOLS_WIN_TOOLCHAIN=0
 IF %platform_ARM% EQU 1 (
 	CALL:print %warning% "Generating WebRTC projects for arm platform ..."
 	SET platform_ARM_prepared=1
-	CALL:generateProjectsForPlatform winuwp_10 arm debug
-	CALL:generateProjectsForPlatform winuwp_10 arm release
+	CALL:generateProjectsForPlatform winuwp arm debug
+	CALL:generateProjectsForPlatform winuwp arm release
 	SET platform_ARM_prepared=2
 )
 
 IF %platform_x64% EQU 1 (
 	CALL:print %warning% "Generating WebRTC projects for x64 platform ..."
 	SET platform_x64_prepared=1
-	CALL:generateProjectsForPlatform winuwp_10 x64 debug
-	CALL:generateProjectsForPlatform winuwp_10 x64 release
+	CALL:generateProjectsForPlatform winuwp x64 debug
+	CALL:generateProjectsForPlatform winuwp x64 release
 	SET platform_x64_prepared=2
 )
 
 IF %platform_x86% EQU 1 (
 	CALL:print %warning% "Generating WebRTC projects for x86 platform ..."
 	SET platform_x86_prepared=1
-	CALL:generateProjectsForPlatform winuwp_10 x86 debug
-	CALL:generateProjectsForPlatform winuwp_10 x86 release
+	CALL:generateProjectsForPlatform winuwp x86 debug
+	CALL:generateProjectsForPlatform winuwp x86 release
 	SET platform_x86_prepared=2
 )
 
